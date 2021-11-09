@@ -1,8 +1,17 @@
 import pygame
 from math import cos, sin, pi, atan2
 
-RAY_AMOUNT = 50
+RAY_AMOUNT = 100
 SPRITE_BACKGROUND = (152, 0, 136, 255)
+
+map1 = "map.txt"
+map2 = "map2.txt"
+
+mapLevel = {
+    '1': map1, 
+    '2': map2,
+    '3': "map2.txt",
+}
 
 wallcolors = {
     '1': pygame.Color('red'), 
@@ -37,9 +46,10 @@ class Raycaster(object):
         self.screen = screen
         _, _, self.width, self.height = screen.get_rect()
         self.map = []
+        self.halfHeight = int(self.height/2)
         self.zbuffer = [float('inf') for z in range(self.width)]
         self.blocksize = 50
-        self.wallheight = 20
+        self.wallheight = 50
 
         self.maxdistance = 300
 
@@ -50,7 +60,8 @@ class Raycaster(object):
             'x': 100,
             'y': 100,
             'fov': 20,
-            'angle': 0
+            'angle': 0,
+            'height': 0,
         }
 
         self.hitEnemy = False
@@ -112,7 +123,7 @@ class Raycaster(object):
         startX += (self.width /  2) - (spriteWidth  / 2)
         startY = (self.height /  2) - (spriteHeight / 2)
         startX = int(startX)
-        startY = int(startY)
+        startY = int(startY) + self.player['height']
 
         for x in range(startX, startX + int(spriteWidth)):
             if (0 < x < self.width) and self.zbuffer[x] >= spriteDist:
@@ -174,7 +185,12 @@ class Raycaster(object):
                         return dist, self.map[j][i], tx
             
     def render(self):
-        halfHeight = int(self.height/2)
+        halfHeight = int(self.height/2) + self.player['height']
+        # Techo
+        screen.fill(pygame.Color("saddlebrown"), (0, 0,  width, halfHeight))
+
+        # Piso
+        screen.fill(pygame.Color("dimgray"), (0, halfHeight,  width, int(height / 2)))
         
         for column in range(RAY_AMOUNT):
             angle = self.player['angle'] - (self.player['fov'] / 2) + (self.player['fov'] * column / RAY_AMOUNT)
@@ -188,8 +204,8 @@ class Raycaster(object):
             
             #perceivedHeight = screenHeight / (distance * cos(rayAngle - viexAngle)) * wallHeight
             h = self.height / (dist * cos((angle - self.player['angle']) * pi / 180)) * self.wallheight
-            startY = int(halfHeight - h/2)
-            endY = int(halfHeight + h/2)
+            startY = int(self.halfHeight - h/2) + self.player['height']
+            endY = int(self.halfHeight + h/2)
 
             color_k = (1-min(1, dist/self.maxdistance)) * 255
 
@@ -204,14 +220,17 @@ class Raycaster(object):
             tex = pygame.transform.scale(tex, (tex.get_width() * rayWidth, int(h)))
             #tex.fill((color_k, color_k, color_k), special_flags=pygame.BLEND_MULT)
             tx = int(tx * tex.get_width())
+            #print( self.player['heightWall'])
             self.screen.blit(tex, (startx, startY), (tx, 0, rayWidth,tex.get_height()))
 
+        
         self.hitEnemy = False
         for enemy in enemies:
             self.drawSprite(enemy, 50)
 
         sightRect = (int(self.width / 2 - 2), int(self.height / 2 - 2), 5,5 )
         self.screen.fill(pygame.Color('red') if self.hitEnemy else pygame.Color('white'), sightRect)
+
 
         self.drawMinimap()
 
@@ -226,7 +245,7 @@ screen = pygame.display.set_mode((width,height), pygame.DOUBLEBUF | pygame.HWACC
 screen.set_alpha(None)
 
 rCaster = Raycaster(screen)
-rCaster.load_map("map2.txt")
+rCaster.load_map(mapLevel['1'])
 
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("Arial", 25)
@@ -266,18 +285,16 @@ while isRunning:
                 rCaster.player['angle'] -= rCaster.turnSize
             elif ev.key == pygame.K_e:
                 rCaster.player['angle'] += rCaster.turnSize
+            elif ev.key == pygame.K_r:
+                rCaster.player['height'] += 100
+            elif ev.key == pygame.K_f:
+                rCaster.player['height'] -= 100
             i = int(newX/rCaster.blocksize)
             j = int(newY/rCaster.blocksize)
 
             if rCaster.map[j][i] == ' ':
                 rCaster.player['x'] = newX  
                 rCaster.player['y'] = newY
-    
-    # Techo
-    screen.fill(pygame.Color("saddlebrown"), (0, 0,  width, int(height / 2)))
-
-    # Piso
-    screen.fill(pygame.Color("dimgray"), (0, int(height / 2),  width, int(height / 2)))
 
     rCaster.render()
 
