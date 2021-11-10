@@ -1,4 +1,5 @@
 import pygame
+from menu import *
 from math import cos, sin, pi, atan2
 
 RAY_AMOUNT = 100
@@ -224,88 +225,112 @@ class Raycaster(object):
         sightRect = (int(self.width / 2 - 2), int(self.height / 2 - 2), 5,5 )
         self.screen.fill(pygame.Color('red') if self.hitEnemy else pygame.Color('white'), sightRect)
 
-
         self.drawMinimap()
 
-            
+class Game():
+    def __init__(self):
+        pygame.init()
+        self.runnig, self.playing = True, False
+        self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
+        self.Display_w, self.Display_H = 500, 500
+        self.display = pygame.Surface((self.Display_w, self.Display_H))
+        self.window = pygame.display.set_mode(((self.Display_w, self.Display_H)))
+        self.screen = pygame.display.set_mode((self.Display_w, self.Display_H), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE )
+        self.screen.set_alpha(None)
+        self.rCaster = Raycaster(self.screen)
+        self.rCaster.load_map(mapLevel['1'])
+        #self.font_name = '8-BIT WONDER.TTF'
+        self.font_name = pygame.font.get_default_font()
+        self.BLACK, self.WHITE = (0,0,0), (255,255,255)
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont("Arial", 25)
+        self.main_menu = MainMenu(self)
+        self.options = OptionsMenu(self)
+        self.credist = CreditsMenu(self)
+        self.curr_menu = self.main_menu
 
+    def updateFPS(self):
+        fps = str(int(self.clock.get_fps()))
+        fps = self.font.render(fps, 1, pygame.Color("white"))
+        return fps
 
-width = 500
-height = 500
+    def game_loop(self):
+        while self.playing:
+            self.check_events()
+            if self.START_KEY:
+                self.playing = False
+            halfHeight = int(self.rCaster.height/2) + self.rCaster.player['height']
+            # Techo
+            self.screen.fill(pygame.Color("saddlebrown"), (0, 0,  self.Display_w, halfHeight))
 
-pygame.init()
-screen = pygame.display.set_mode((width,height), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE )
-screen.set_alpha(None)
+            # Piso
+            self.screen.fill(pygame.Color("dimgray"), (0, halfHeight,  self.Display_w, int(self.Display_H / 2)))
+            self.rCaster.render()
 
-rCaster = Raycaster(screen)
-rCaster.load_map(mapLevel['1'])
+            #FPS
+            self.screen.fill(pygame.Color("black"), (0,0,30,30))
+            self.screen.blit(self.updateFPS(), (0,0))
+            self.clock.tick(70)
 
-clock = pygame.time.Clock()
-font = pygame.font.SysFont("Arial", 25)
+            self.draw_text('Thanks for Playing', 20, self.Display_w/2, self.Display_H/2)
 
-def updateFPS():
-    fps = str(int(clock.get_fps()))
-    fps = font.render(fps, 1, pygame.Color("white"))
-    return fps
+            pygame.display.update()
+            self.reset_keys()
 
-isRunning = True
-while isRunning:
+    def check_events(self):
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                self.runnig, self.playing = False, False
+                self.curr_menu.run_display = False
+            elif ev.type == pygame.KEYDOWN:
+                newX = self.rCaster.player['x']
+                newY = self.rCaster.player['y']
+                forward = self.rCaster.player['angle'] * pi / 180
+                rigth = (self.rCaster.player['angle'] + 90) * pi / 180
+                if ev.key == pygame.K_RETURN:
+                    self.START_KEY = True
+                elif ev.key == pygame.K_BACKSPACE:
+                    self.BACK_KEY = True
+                elif ev.key == pygame.K_DOWN:
+                    self.DOWN_KEY = True
+                elif ev.key == pygame.K_UP:
+                    self.UP_KEY = True
+                elif ev.key == pygame.K_ESCAPE:
+                    self.runnig, self.playing = False, False
+                    self.curr_menu.run_display = False
+                elif ev.key == pygame.K_w:
+                    newX += cos(forward) * self.rCaster.stepsize
+                    newY += sin(forward) * self.rCaster.stepsize
+                elif ev.key == pygame.K_s:
+                    newX -= cos(forward) * self.rCaster.stepsize
+                    newY -= sin(forward) * self.rCaster.stepsize
+                elif ev.key == pygame.K_a:
+                    newX -= cos(rigth) * self.rCaster.stepsize
+                    newY -= sin(rigth) * self.rCaster.stepsize
+                elif ev.key == pygame.K_d:
+                    newX += cos(rigth) * self.rCaster.stepsize
+                    newY += sin(rigth) * self.rCaster.stepsize
+                elif ev.key == pygame.K_q:
+                    self.rCaster.player['angle'] -= self.rCaster.turnSize
+                elif ev.key == pygame.K_e:
+                    self.rCaster.player['angle'] += self.rCaster.turnSize
+                elif ev.key == pygame.K_r:
+                    self.rCaster.player['height'] += 100
+                elif ev.key == pygame.K_f:
+                    self.rCaster.player['height'] -= 100
+                i = int(newX/self.rCaster.blocksize)
+                j = int(newY/self.rCaster.blocksize)
 
-    for ev in pygame.event.get():
-        if ev.type == pygame.QUIT:
-            isRunning = False
-        elif ev.type == pygame.KEYDOWN:
-            newX = rCaster.player['x']
-            newY = rCaster.player['y']
-            forward = rCaster.player['angle'] * pi / 180
-            rigth = (rCaster.player['angle'] + 90) * pi / 180
+                if self.rCaster.map[j][i] == ' ':
+                    self.rCaster.player['x'] = newX  
+                    self.rCaster.player['y'] = newY
+    
+    def reset_keys(self):
+        self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
 
-            if ev.key == pygame.K_ESCAPE:
-                isRunning = False
-            elif ev.key == pygame.K_w:
-                newX += cos(forward) * rCaster.stepsize
-                newY += sin(forward) * rCaster.stepsize
-            elif ev.key == pygame.K_s:
-                newX -= cos(forward) * rCaster.stepsize
-                newY -= sin(forward) * rCaster.stepsize
-            elif ev.key == pygame.K_a:
-                newX -= cos(rigth) * rCaster.stepsize
-                newY -= sin(rigth) * rCaster.stepsize
-            elif ev.key == pygame.K_d:
-                newX += cos(rigth) * rCaster.stepsize
-                newY += sin(rigth) * rCaster.stepsize
-            elif ev.key == pygame.K_q:
-                rCaster.player['angle'] -= rCaster.turnSize
-            elif ev.key == pygame.K_e:
-                rCaster.player['angle'] += rCaster.turnSize
-            elif ev.key == pygame.K_r:
-                rCaster.player['height'] += 100
-            elif ev.key == pygame.K_f:
-                rCaster.player['height'] -= 100
-            i = int(newX/rCaster.blocksize)
-            j = int(newY/rCaster.blocksize)
-
-            if rCaster.map[j][i] == ' ':
-                rCaster.player['x'] = newX  
-                rCaster.player['y'] = newY
-
-    halfHeight = int(rCaster.height/2) + rCaster.player['height']
-
-    # Techo
-    screen.fill(pygame.Color("saddlebrown"), (0, 0,  width, halfHeight))
-
-    # Piso
-    screen.fill(pygame.Color("dimgray"), (0, halfHeight,  width, int(height / 2)))
-
-    rCaster.render()
-
-    #FPS
-    screen.fill(pygame.Color("black"), (0,0,30,30))
-    screen.blit(updateFPS(), (0,0))
-    clock.tick(70)
-
-    pygame.display.update()
-
-
-
-pygame.quit()
+    def draw_text(self, text, size, x, y):
+        font = pygame.font.Font(self.font_name, size)
+        text_surface = font.render(text, True, self.WHITE)
+        text_rect = text_surface.get_rect()
+        text_rect.center = (x,y)
+        self.display.blit(text_surface, text_rect)
