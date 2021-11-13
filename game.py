@@ -39,11 +39,11 @@ enemies = [
       "y": 200,
       "sprite": pygame.image.load('sprite1.png')},
      {"x": 350,
-      "y": 150,
-      "sprite": pygame.image.load('sprite2.png')},
+      "y": 160,
+      "sprite": pygame.image.load('cthulhu.png')},
      {"x": 300,
       "y": 400,
-      "sprite": pygame.image.load('sprite3.png')}
+      "sprite": pygame.image.load('hitler.png')}
 ]
 
 class Raycaster(object):

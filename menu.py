@@ -25,7 +25,9 @@ class MainMenu(Menu):
         self.creditsx, self.creditsy = self.mid_w, self.mid_h + 80
         self.cursor_rect.midtop = (self.startX + self.offset, self.starty)
         self.background = pygame.image.load('background.jpg')
-
+        self.cthulhu = pygame.image.load('cthulhu.png')
+        self.x = 100
+        self.y = 200
 
     def display_menu(self):
         self.run_display = True
@@ -35,7 +37,8 @@ class MainMenu(Menu):
             self.check_input()
             self.game.display.fill(pygame.Color("gray"))
             self.game.display.blit(self.background, (0, 0))
-            self.game.draw_text('Chutillu y el pana miguel', 22, self.game.Display_w/2, self.game.Display_H/2 - 100)
+            self.game.display.blit(pygame.transform.scale(self.cthulhu, (50, 50)), (self.x, self.y))
+            self.game.draw_text('Cthulhu y el pana miguel', 22, self.game.Display_w/2, self.game.Display_H/2 - 100)
             self.game.draw_text('Main Menu', 20, self.game.Display_w/2, self.game.Display_H/2 - 20)
             self.game.draw_text('Start Game', 20, self.startX, self.starty)
             self.game.draw_text('Credits', 20, self.optionsx, self.optionsy)
