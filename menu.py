@@ -175,3 +175,66 @@ class CreditsMenu(Menu):
             self.game.draw_text('Credits', 20, self.game.Display_w/2, self.game.Display_H/2 - 20)
             self.game.draw_text('Made by me', 15, self.game.Display_w/2, self.game.Display_H/2 + 10)
             self.blit_screen()
+
+class PauseMenu(Menu):
+    def __init__(self, game):
+        Menu.__init__(self, game)
+    
+    def display_menu(self):
+        self.run_display = True
+        while self.run_display:
+            self.game.check_events()
+            self.game.display.fill((0,0,0))
+            self.game.draw_text('Pause', 30, self.game.Display_w/2, self.game.Display_H/2 - 20)
+            if self.game.draw_button(150, self.game.Display_H/2 + 50, 200, 40,'Main menu'):
+                self.game.curr_menu = self.game.main_menu
+                self.run_display = False
+                self.game.isPause = False
+                self.game.rCaster.player['x'] = 100
+                self.game.rCaster.player['y'] = 95
+                self.game.rCaster.player['angle'] = 0
+                self.game.rCaster.player['height'] = 0
+            if self.game.draw_button(150, self.game.Display_H/2 + 100, 200, 40,'Resume'):
+                self.game.playing = True
+                self.run_display = False
+                self.game.isPause = False
+                self.game.music()
+            self.blit_screen()
+
+class Victoria(Menu):
+    def __init__(self, game):
+        Menu.__init__(self, game)
+        self.count = 0
+
+    def display_menu(self):
+        self.run_display = True 
+        while self.run_display:
+            self.game.check_events()
+            self.game.display.fill(self.game.BLACK)
+            self.game.draw_text('Presione enter para pasar al siguiente nivel', 10, self.game.Display_w/2, self.game.Display_H/2 + 10)
+            if self.game.map == '1':
+                if self.count == 0:
+                    self.game.rCaster.map = []
+                    self.game.map = '2'
+                    self.game.name_map = "El ayayay"
+                    self.game.loadMap()
+                    self.count = 1
+            elif self.game.map == '2':
+                if self.count == 0:
+                    self.game.rCaster.map = []
+                    self.game.map = '3'
+                    self.game.name_map = "La matraca"
+                    self.game.loadMap()
+                    self.count = 1
+            if self.game.START_KEY:
+                self.game.playing = True
+                self.game.rCaster.victoria = False
+                self.run_display = False
+                self.game.rCaster.player['x'] = 100
+                self.game.rCaster.player['y'] = 95
+                self.game.rCaster.player['angle'] = 0
+                self.game.rCaster.player['height'] = 0
+                self.game.music()
+                self.count = 0
+            self.blit_screen()
+            

@@ -32,7 +32,8 @@ wallTextures = {
     '2': pygame.image.load('wall2.png'),
     '3': pygame.image.load('wall3.png'),
     '4': pygame.image.load('wall4.png'),
-    '5': pygame.image.load('wall5.png')
+    '5': pygame.image.load('wall5.png'),
+    '6': pygame.image.load('textures/BRNBIGC.png')
 }
 
 enemies = [
@@ -43,7 +44,7 @@ enemies = [
       "y": 160,
       "sprite": pygame.image.load('cthulhu.png')},
      {"x": 300,
-      "y": 400,
+      "y": 330,
       "sprite": pygame.image.load('hitler.png')}
 ]
 
@@ -62,9 +63,11 @@ class Raycaster(object):
         self.stepsize = 5
         self.turnSize = 5
 
+        self.victoria = False
+
         self.player = {
             'x': 100,
-            'y': 100,
+            'y': 95,
             'fov': 20,
             'angle': 0,
             'height': 0,
@@ -215,6 +218,8 @@ class Raycaster(object):
             #             wallcolors[id][1] * color_k,
             #             wallcolors[id][2] * color_k)
             #self.screen.fill(wallColor, rect)
+            if dist <= 45 and id == "6":
+                self.victoria = True
 
             tex = wallTextures[id]
             tex = pygame.transform.scale(tex, (tex.get_width() * rayWidth, int(h)))
@@ -254,6 +259,8 @@ class Game():
         self.main_menu = MainMenu(self)
         self.options = OptionsMenu(self)
         self.credist = CreditsMenu(self)
+        self.pause = PauseMenu(self)
+        self.victoria = Victoria(self)
         self.curr_menu = self.main_menu
         self.clicked = False
         self.button_col = (25, 190, 255)
@@ -264,6 +271,7 @@ class Game():
         self.name_map = None
         self.heart = pygame.image.load('life.png')
         self.bullet = pygame.image.load('bullet.png')
+        self.isPause = False
     
     def loadMap(self):
         self.confirmador = self.rCaster.load_map(mapLevel[self.map])
@@ -275,12 +283,15 @@ class Game():
 
     def music(sefl):
         mixer.music.load('y2mate.com - Epic Dark Choral Music CTHULHU AWAKENS by Apollon de Moura_64kbps.mp3.mp3')
-        mixer.music.play(-1)
+        mixer.music.play()
 
     def game_loop(self):
         while self.playing:
             self.check_events()
             if self.START_KEY:
+                self.playing = False
+            if self.rCaster.victoria:
+                self.curr_menu = self.victoria
                 self.playing = False
             halfHeight = int(self.rCaster.height/2) + self.rCaster.player['height']
             # Techo
@@ -309,7 +320,7 @@ class Game():
             if ev.type == pygame.QUIT:
                 self.runnig, self.playing = False, False
                 self.curr_menu.run_display = False
-            elif ev.type == pygame.KEYDOWN:
+            elif ev.type == pygame.KEYDOWN and self.isPause == False:
                 newX = self.rCaster.player['x']
                 newY = self.rCaster.player['y']
                 forward = self.rCaster.player['angle'] * pi / 180
@@ -323,8 +334,10 @@ class Game():
                 elif ev.key == pygame.K_UP:
                     self.UP_KEY = True
                 elif ev.key == pygame.K_ESCAPE:
-                    self.runnig, self.playing = False, False
-                    self.curr_menu.run_display = False
+                    self.playing = False
+                    self.curr_menu = self.pause
+                    self.isPause = True
+                    mixer.music.pause()
                 elif ev.key == pygame.K_w:
                     newX += cos(forward) * self.rCaster.stepsize
                     newY += sin(forward) * self.rCaster.stepsize
@@ -345,6 +358,10 @@ class Game():
                     self.rCaster.player['height'] += 100
                 elif ev.key == pygame.K_f:
                     self.rCaster.player['height'] -= 100
+                elif ev.key == pygame.K_g:
+                    self.music()
+                elif ev.key == pygame.K_h:
+                    mixer.music.pause()
                 i = int(newX/self.rCaster.blocksize)
                 j = int(newY/self.rCaster.blocksize)
 
