@@ -118,14 +118,17 @@ class OptionsMenu(Menu):
         if self.state == 'map1':
             self.game.rCaster.map = []
             self.game.map = '1'
+            self.game.name_map = "Ululu"
             self.game.loadMap()
         elif self.state == 'map2':
             self.game.rCaster.map = []
             self.game.map = '2'
+            self.game.name_map = "El ayayay"
             self.game.loadMap()
         elif self.state == 'map3':
             self.game.rCaster.map = []
             self.game.map = '3'
+            self.game.name_map = "La matraca"
             self.game.loadMap()
     
     def check_inputs(self):
@@ -155,6 +158,7 @@ class OptionsMenu(Menu):
         elif self.game.START_KEY:
             self.game.playing = True
             self.run_display = False
+            #self.game.music()
 
 class CreditsMenu(Menu):
     def __init__(self, game):

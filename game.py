@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from menu import *
 from math import cos, sin, pi, atan2
+from pygame import mixer
 
 RAY_AMOUNT = 100
 SPRITE_BACKGROUND = (152, 0, 136, 255)
@@ -260,6 +261,9 @@ class Game():
         self.click_col = (50, 150, 255)
         self.text_col = (255, 255, 255)
         self.confirmador = None
+        self.name_map = None
+        self.heart = pygame.image.load('life.png')
+        self.bullet = pygame.image.load('bullet.png')
     
     def loadMap(self):
         self.confirmador = self.rCaster.load_map(mapLevel[self.map])
@@ -268,6 +272,10 @@ class Game():
         fps = str(int(self.clock.get_fps()))
         fps = self.font.render(fps, 1, pygame.Color("white"))
         return fps
+
+    def music(sefl):
+        mixer.music.load('y2mate.com - Epic Dark Choral Music CTHULHU AWAKENS by Apollon de Moura_64kbps.mp3.mp3')
+        mixer.music.play(-1)
 
     def game_loop(self):
         while self.playing:
@@ -287,8 +295,12 @@ class Game():
             self.screen.blit(self.updateFPS(), (0,0))
             self.clock.tick(70)
 
-            self.draw_text('Thanks for Playing', 20, self.Display_w/2, self.Display_H/2)
-
+            self.draw_text2(self.name_map, 20, self.Display_w / 2, 15)
+            self.screen.blit(pygame.transform.scale(self.heart, (50, 50)), (5, self.Display_H - 50))
+            self.screen.blit(pygame.transform.scale(self.heart, (50, 50)), (40, self.Display_H - 50))
+            self.screen.blit(pygame.transform.scale(self.heart, (50, 50)), (75, self.Display_H - 50))
+            self.screen.blit(pygame.transform.scale(self.bullet, (50, 50)), (150, self.Display_H - 50))
+            self.draw_text2("30/ 30", 30, 275, self.Display_H - 25)
             pygame.display.update()
             self.reset_keys()
 
@@ -349,6 +361,13 @@ class Game():
         text_rect = text_surface.get_rect()
         text_rect.center = (x,y)
         self.display.blit(text_surface, text_rect)
+    
+    def draw_text2(self, text, size, x, y):
+        font = pygame.font.Font(self.font_name, size)
+        text_surface = font.render(text, True, self.WHITE)
+        text_rect = text_surface.get_rect()
+        text_rect.center = (x,y)
+        self.screen.blit(text_surface, text_rect)
     
     def draw_button(self, x, y, width, height, text):
         global clicked
