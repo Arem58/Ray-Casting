@@ -158,7 +158,7 @@ class OptionsMenu(Menu):
         elif self.game.START_KEY:
             self.game.playing = True
             self.run_display = False
-            #self.game.music()
+            self.game.music()
 
 class CreditsMenu(Menu):
     def __init__(self, game):
