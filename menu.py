@@ -12,7 +12,7 @@ class Menu():
         self.game.draw_text('*', 15, self.cursor_rect.x, self.cursor_rect.y)
     
     def blit_screen(self):
-        self.game.window.blit(self.game.display, (0,0))
+        self.game.screen.blit(self.game.display, (0,0))
         pygame.display.update()
         self.game.reset_keys()
     
@@ -21,23 +21,39 @@ class MainMenu(Menu):
         Menu.__init__(self, game)
         self.state = "Start"
         self.startX, self.starty = self.mid_w, self.mid_h + 30
-        self.optionsx, self.optionsy = self.mid_w, self.mid_h + 50
-        self.creditsx, self.creditsy = self.mid_w, self.mid_h + 70
+        self.optionsx, self.optionsy = self.mid_w, self.mid_h + 55
+        self.creditsx, self.creditsy = self.mid_w, self.mid_h + 80
         self.cursor_rect.midtop = (self.startX + self.offset, self.starty)
+        self.background = pygame.image.load('background.jpg')
+
 
     def display_menu(self):
         self.run_display = True
         while self.run_display:
             self.game.check_events()
+            self.check_state()
             self.check_input()
-            self.game.display.fill(self.game.BLACK)
+            self.game.display.fill(pygame.Color("gray"))
+            self.game.display.blit(self.background, (0, 0))
+            self.game.draw_text('Chutillu y el pana miguel', 22, self.game.Display_w/2, self.game.Display_H/2 - 100)
             self.game.draw_text('Main Menu', 20, self.game.Display_w/2, self.game.Display_H/2 - 20)
             self.game.draw_text('Start Game', 20, self.startX, self.starty)
-            self.game.draw_text('Options', 20, self.optionsx, self.optionsy)
+            self.game.draw_text('Credits', 20, self.optionsx, self.optionsy)
             self.game.draw_text('Quit', 20, self.creditsx, self.creditsy)
+            if self.game.draw_button(150, self.creditsy + 50, 200, 40,'Start game'):
+                self.game.curr_menu = self.game.options
+                self.run_display = False
+            if self.game.draw_button(150, self.creditsy + 100, 200, 40,'Quit'):
+                pygame.quit()
+                sys.exit()
             self.draw_cursor()
             self.blit_screen()
+            #print(self.game.rCaster.map)
     
+    def check_state(self):
+        if self.state == 'Start':
+            self.game.loadMap()
+
     def move_cursor(self):
         if self.game.DOWN_KEY:
             if self.state == 'Start':
@@ -64,9 +80,9 @@ class MainMenu(Menu):
         self.move_cursor()
         if self.game.START_KEY:
             if self.state == 'Start':
-                self.game.playing = True
-            elif self.state == 'Options':
                 self.game.curr_menu = self.game.options
+            elif self.state == 'Options':
+                self.game.curr_menu = self.game.credist
             elif self.state == 'Quit':
                 pygame.quit()
                 sys.exit()
@@ -75,36 +91,67 @@ class MainMenu(Menu):
 class OptionsMenu(Menu):
     def __init__(self, game):
         Menu.__init__(self, game)
-        self.state = 'Volume'
-        self.volx, self.voly = self.mid_w, self.mid_h + 20
-        self.controlsx, self.controlsy = self.mid_w, self.mid_h + 40
-        self.cursor_rect.midtop = (self.volx + self.offset, self.voly)
+        self.state = 'map1'
+        self.map1x, self.map1y = self.mid_w, self.mid_h + 20
+        self.map2x, self.map2y = self.mid_w, self.mid_h + 50
+        self.map3x, self.map3y = self.mid_w, self.mid_h + 80
+        self.cursor_rect.midtop = (self.map1x + self.offset, self.map1y)
     
     def display_menu(self):
         self.run_display = True
         while self.run_display:
+            self.check_state()
             self.game.check_events()
             self.check_inputs()
             self.game.display.fill((0,0,0))
-            self.game.draw_text('Options', 20, self.game.Display_w/2, self.game.Display_H/2)
-            self.game.draw_text('Volume', 15, self.volx, self.voly)
-            self.game.draw_text('Controls', 15, self.controlsx, self.controlsy)
+            self.game.draw_text('Maps', 20, self.game.Display_w/2, self.game.Display_H/2 - 20)
+            self.game.draw_text('Ululu', 15, self.map1x, self.map1y)
+            self.game.draw_text('El ayayay', 15, self.map2x, self.map2y)
+            self.game.draw_text('La matraca', 15, self.map3x, self.map3y)
             self.draw_cursor()
             self.blit_screen()
+        
+    def check_state(self):
+        if self.state == 'map1':
+            self.game.rCaster.map = []
+            self.game.map = '1'
+            self.game.loadMap()
+        elif self.state == 'map2':
+            self.game.rCaster.map = []
+            self.game.map = '2'
+            self.game.loadMap()
+        elif self.state == 'map3':
+            self.game.rCaster.map = []
+            self.game.map = '3'
+            self.game.loadMap()
     
     def check_inputs(self):
         if self.game.BACK_KEY:
             self.game.curr_menu = self.game.main_menu
             self.run_display = False
-        elif self.game.UP_KEY or self.game.DOWN_KEY:
-            if self.state == 'Volume':
-                self.state = 'Controls'
-                self.cursor_rect.midtop = (self.controlsx + self.offset, self.controlsy)
-            elif self.state == 'Controls':
-                self.state = 'Volume'
-                self.cursor_rect.midtop = (self.volx + self.offset, self.voly)
+        elif self.game.DOWN_KEY:
+            if self.state == 'map1':
+                self.cursor_rect.midtop = (self.map2x + self.offset, self.map2y)
+                self.state = 'map2'
+            elif self.state == 'map2':
+                self.cursor_rect.midtop = (self.map3x + self.offset, self.map3y)
+                self.state = 'map3'
+            elif self.state == 'map3':
+                self.cursor_rect.midtop = (self.map1x + self.offset, self.map1y)
+                self.state = 'map1'
+        elif self.game.UP_KEY:
+            if self.state == 'map1':
+                self.cursor_rect.midtop = (self.map3x + self.offset, self.map3y)
+                self.state = 'map3'
+            elif self.state == 'map3':
+                self.cursor_rect.midtop = (self.map2x + self.offset, self.map2y)
+                self.state = 'map2'
+            elif self.state == 'map2':
+                self.cursor_rect.midtop = (self.map1x + self.offset, self.map1y)
+                self.state = 'map1'
         elif self.game.START_KEY:
-            pass
+            self.game.playing = True
+            self.run_display = False
 
 class CreditsMenu(Menu):
     def __init__(self, game):

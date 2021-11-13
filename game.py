@@ -1,17 +1,21 @@
 import pygame
+from pygame.locals import *
 from menu import *
 from math import cos, sin, pi, atan2
 
 RAY_AMOUNT = 100
 SPRITE_BACKGROUND = (152, 0, 136, 255)
+black = (0, 0, 0)
+white = (255, 255, 255)
 
 map1 = "map.txt"
 map2 = "map2.txt"
+map3 = "map3.txt"
 
 mapLevel = {
     '1': map1, 
     '2': map2,
-    '3': "map2.txt",
+    '3': map3,
 }
 
 wallcolors = {
@@ -71,6 +75,7 @@ class Raycaster(object):
         with open(filename) as file:
             for line in file.readlines():
                 self.map.append(list(line.rstrip()))
+        return self.map
 
     def drawMinimap(self):
         minimapWidth = 100
@@ -230,24 +235,34 @@ class Raycaster(object):
 class Game():
     def __init__(self):
         pygame.init()
+        self.map = '1'
         self.runnig, self.playing = True, False
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
         self.Display_w, self.Display_H = 500, 500
         self.display = pygame.Surface((self.Display_w, self.Display_H))
-        self.window = pygame.display.set_mode(((self.Display_w, self.Display_H)))
+        #self.window = pygame.display.set_mode(((self.Display_w, self.Display_H)))
         self.screen = pygame.display.set_mode((self.Display_w, self.Display_H), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE )
         self.screen.set_alpha(None)
         self.rCaster = Raycaster(self.screen)
-        self.rCaster.load_map(mapLevel['1'])
-        #self.font_name = '8-BIT WONDER.TTF'
-        self.font_name = pygame.font.get_default_font()
+        self.font_name = '8-BIT WONDER.TTF'
+        #self.font_name = pygame.font.get_default_font()
         self.BLACK, self.WHITE = (0,0,0), (255,255,255)
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 25)
+        self.font2 = pygame.font.SysFont('Constantia', 30)
         self.main_menu = MainMenu(self)
         self.options = OptionsMenu(self)
         self.credist = CreditsMenu(self)
         self.curr_menu = self.main_menu
+        self.clicked = False
+        self.button_col = (25, 190, 255)
+        self.hover_col = (75, 225, 255)
+        self.click_col = (50, 150, 255)
+        self.text_col = (255, 255, 255)
+        self.confirmador = None
+    
+    def loadMap(self):
+        self.confirmador = self.rCaster.load_map(mapLevel[self.map])
 
     def updateFPS(self):
         fps = str(int(self.clock.get_fps()))
@@ -334,3 +349,35 @@ class Game():
         text_rect = text_surface.get_rect()
         text_rect.center = (x,y)
         self.display.blit(text_surface, text_rect)
+    
+    def draw_button(self, x, y, width, height, text):
+        global clicked
+        action = False
+        #get mouse position
+        pos = pygame.mouse.get_pos()
+        #create pygame Rect ovject for the vutton
+        button_rect = Rect(x, y, width, height)
+        #check mouseover and clicked conditions
+        if button_rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1:
+                self.clicked = True
+                pygame.draw.rect(self.display, self.click_col, button_rect)
+            elif pygame.mouse.get_pressed()[0] == 0 and self.clicked == True:
+                self.clicked = False
+                action = True
+            else:
+                pygame.draw.rect(self.display, self.hover_col, button_rect)
+        else: 
+            pygame.draw.rect(self.display, self.button_col, button_rect)
+        #add shading to button
+        pygame.draw.line(self.display, white, (x, y), (x + width, y), 2)
+        pygame.draw.line(self.display, white, (x, y), (x, y + height), 2)
+        pygame.draw.line(self.display, black, (x, y + height), (x + width, y + height), 2)
+        pygame.draw.line(self.display, black, (x + width, y), (x + width, y + height), 2)
+        #add text to button
+        text_img = self.font2.render(text, True, self.text_col)
+        text_len = text_img.get_width()
+        self.display.blit(text_img, (x + int(width/2) - int(text_len/2), y + 5))
+        return action        
+    
+    
